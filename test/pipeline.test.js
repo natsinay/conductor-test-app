@@ -8,6 +8,7 @@ import {
   isGate,
   nextStage,
   evaluateRun,
+  getFooterYear,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -94,4 +95,11 @@ test('skip is a valid, non-blocking outcome for a gate', () => {
 
 test('an invalid outcome throws', () => {
   assert.throws(() => evaluateRun({ build: 'maybe' }), /Invalid outcome/);
+});
+
+test('getFooterYear returns the current four-digit year as a string', () => {
+  const year = getFooterYear();
+  assert.equal(typeof year, 'string');
+  assert.match(year, /^\d{4}$/);
+  assert.equal(year, String(new Date().getFullYear()));
 });

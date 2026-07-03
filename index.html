@@ -111,10 +111,13 @@
         and <code>pipeline.js</code>. Run the tests with
         <code>node --test</code>.
       </p>
+      <p class="footer__credit">
+        Built by Conductor · <span id="footer-year"></span>
+      </p>
     </footer>
 
     <script type="module">
-      import { STAGES } from './pipeline.js';
+      import { STAGES, getFooterYear } from './pipeline.js';
 
       // Progressively enhance the pipeline map from the shared module so the
       // page and the tests can never drift out of sync.
@@ -136,6 +139,12 @@
           );
           list.append(li);
         }
+      }
+
+      // Stamp the footer year using the shared helper.
+      const yearEl = document.getElementById('footer-year');
+      if (yearEl) {
+        yearEl.textContent = getFooterYear();
       }
     </script>
   </body>

@@ -194,3 +194,10 @@ footer {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+.footer__credit {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  opacity: 0.7;
+}

@@ -76,6 +76,17 @@ export function nextStage(id) {
 }
 
 /**
+ * Returns the current four-digit calendar year as a string.
+ * Used by the page footer ("Built by Conductor · <year>") and tested
+ * independently so the logic is always verifiable.
+ *
+ * @returns {string} e.g. "2025"
+ */
+export function getFooterYear() {
+  return String(new Date().getFullYear());
+}
+
+/**
  * Evaluate a run through the pipeline.
  *
  * @param {Record<string, ('pass'|'fail'|'skip')>} results
