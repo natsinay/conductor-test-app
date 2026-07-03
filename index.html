@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Conductor — the change pipeline</title>
+    <meta
+      name="description"
+      content="How the Conductor platform moves a change from spec to production through a sequence of gates."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <p class="eyebrow">Conductor platform</p>
+        <h1>Every change takes the same well-lit path.</h1>
+        <p class="lede">
+          Conductor moves a change through a fixed pipeline. Most stages are
+          <strong>gates</strong> that can stop the run; one is
+          <strong>advisory</strong> and only offers guidance. The same
+          <code>pipeline.js</code> module that renders the map below is unit
+          tested with <code>node --test</code> — no build step, no
+          dependencies.
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section aria-labelledby="pipeline-heading">
+        <h2 id="pipeline-heading">The pipeline at a glance</h2>
+        <p>
+          Stages run top to bottom. A failing gate halts everything after it;
+          advisory review never blocks.
+        </p>
+        <ol id="pipeline-map" class="pipeline">
+          <!-- Populated from pipeline.js. The static fallback below keeps the
+               page meaningful without JavaScript. -->
+          <li>Spec Gate</li>
+          <li>Build</li>
+          <li>Advisory Review</li>
+          <li>Execution Gate</li>
+          <li>Merge Gate</li>
+          <li>Promote</li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="stages-heading">
+        <h2 id="stages-heading">What each stage does</h2>
+
+        <article id="spec-gate" class="stage stage--gate">
+          <h3>1 · Spec Gate <span class="tag tag--gate">Gate</span></h3>
+          <p>
+            Before any work begins, the spec gate confirms the change has an
+            approved specification. No approved spec, no pipeline — this keeps
+            work anchored to something the team actually agreed to build.
+          </p>
+        </article>
+
+        <article id="build" class="stage stage--gate">
+          <h3>2 · Build <span class="tag tag--gate">Gate</span></h3>
+          <p>
+            The change is compiled and the automated test suite runs. A red
+            build is a hard stop: nothing downstream sees a change that does not
+            compile or pass its tests.
+          </p>
+        </article>
+
+        <article id="advisory-review" class="stage stage--advisory">
+          <h3>3 · Advisory Review <span class="tag tag--advisory">Advisory</span></h3>
+          <p>
+            The only non-blocking stage. Automated and human reviewers surface
+            suggestions, style notes, and risks. These annotate the run so
+            people can weigh them, but they never stop it — advisories inform,
+            they do not gate.
+          </p>
+        </article>
+
+        <article id="execution-gate" class="stage stage--gate">
+          <h3>4 · Execution Gate <span class="tag tag--gate">Gate</span></h3>
+          <p>
+            Approval to run the change against real, live resources. This is the
+            boundary between "safe to try" and "touching production data," so it
+            requires an explicit go-ahead.
+          </p>
+        </article>
+
+        <article id="merge-gate" class="stage stage--gate">
+          <h3>5 · Merge Gate <span class="tag tag--gate">Gate</span></h3>
+          <p>
+            The final human sign-off before the change lands on the main line.
+            Once merged, the change becomes part of the shared history everyone
+            builds on.
+          </p>
+        </article>
+
+        <article id="promote" class="stage stage--gate">
+          <h3>6 · Promote <span class="tag tag--gate">Gate</span></h3>
+          <p>
+            The merged change is rolled out to the production environment.
+            Promotion is the last gate — it is where a reviewed, merged change
+            becomes something users actually run.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="wrap">
+      <p>
+        Built as a static site: <code>index.html</code>, <code>styles.css</code>,
+        and <code>pipeline.js</code>. Run the tests with
+        <code>node --test</code>.
+      </p>
+    </footer>
+
+    <script type="module">
+      import { STAGES } from './pipeline.js';
+
+      // Progressively enhance the pipeline map from the shared module so the
+      // page and the tests can never drift out of sync.
+      const list = document.getElementById('pipeline-map');
+      if (list) {
+        list.innerHTML = '';
+        for (const stage of STAGES) {
+          const li = document.createElement('li');
+          li.className = stage.gate ? 'is-gate' : 'is-advisory';
+          const link = document.createElement('a');
+          link.href = `#${stage.id}`;
+          link.textContent = stage.name;
+          li.append(link);
+          li.append(
+            Object.assign(document.createElement('span'), {
+              className: 'pipeline__note',
+              textContent: stage.summary,
+            }),
+          );
+          list.append(li);
+        }
+      }
+    </script>
+  </body>
+</html>

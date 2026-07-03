@@ -1,0 +1,136 @@
+// pipeline.js — a small, dependency-free model of the Conductor pipeline.
+//
+// The Conductor pipeline moves a change through a fixed sequence of stages.
+// Some stages are *gates*: they can block progress. One stage (advisory
+// review) is non-blocking — it annotates the run but never stops it.
+//
+// This module is a plain ES module so it can be imported by index.html
+// (via <script type="module">) and by the Node test runner alike.
+
+/**
+ * The ordered stages of the Conductor pipeline.
+ * `gate: true`  -> a failing/blocked stage stops the run.
+ * `gate: false` -> the stage is advisory and never blocks.
+ */
+export const STAGES = [
+  {
+    id: 'spec-gate',
+    name: 'Spec Gate',
+    gate: true,
+    summary: 'Confirms the change has an approved spec before any work starts.',
+  },
+  {
+    id: 'build',
+    name: 'Build',
+    gate: true,
+    summary: 'Compiles the change and runs the automated test suite.',
+  },
+  {
+    id: 'advisory-review',
+    name: 'Advisory Review',
+    gate: false,
+    summary: 'Surfaces non-blocking suggestions and risks for humans to weigh.',
+  },
+  {
+    id: 'execution-gate',
+    name: 'Execution Gate',
+    gate: true,
+    summary: 'Approves running the change against real, live resources.',
+  },
+  {
+    id: 'merge-gate',
+    name: 'Merge Gate',
+    gate: true,
+    summary: 'Final human sign-off before the change lands on the main line.',
+  },
+  {
+    id: 'promote',
+    name: 'Promote',
+    gate: true,
+    summary: 'Rolls the merged change out to the production environment.',
+  },
+];
+
+/** Stage ids in pipeline order. */
+export const STAGE_IDS = STAGES.map((s) => s.id);
+
+/** Look up a stage definition by id. Returns undefined if unknown. */
+export function getStage(id) {
+  return STAGES.find((s) => s.id === id);
+}
+
+/** True when a stage exists and is a blocking gate. */
+export function isGate(id) {
+  const stage = getStage(id);
+  return Boolean(stage && stage.gate);
+}
+
+/**
+ * Given a stage id, return the id of the next stage, or null if it is the
+ * last stage. Throws on an unknown id so typos fail loudly.
+ */
+export function nextStage(id) {
+  const index = STAGE_IDS.indexOf(id);
+  if (index === -1) throw new Error(`Unknown stage: ${id}`);
+  return index === STAGE_IDS.length - 1 ? null : STAGE_IDS[index + 1];
+}
+
+/**
+ * Evaluate a run through the pipeline.
+ *
+ * @param {Record<string, ('pass'|'fail'|'skip')>} results
+ *        Map of stage id -> outcome. Missing stages are treated as 'pass'.
+ * @returns {{
+ *   status: 'passed'|'blocked',
+ *   reached: string,          // id of the furthest stage evaluated
+ *   blockedAt: string|null,   // gate id that stopped the run, or null
+ *   advisories: string[],     // ids of advisory stages that reported issues
+ *   stages: Array<{ id: string, outcome: string, blocked: boolean }>,
+ * }}
+ *
+ * Rules:
+ *  - Stages run in fixed order.
+ *  - A blocking gate with outcome 'fail' stops the run at that stage.
+ *  - An advisory stage never stops the run; a 'fail' is recorded as an advisory.
+ *  - An unknown outcome value throws.
+ */
+export function evaluateRun(results = {}) {
+  const valid = new Set(['pass', 'fail', 'skip']);
+  const stages = [];
+  const advisories = [];
+  let blockedAt = null;
+  let reached = null;
+
+  for (const stage of STAGES) {
+    const outcome = Object.prototype.hasOwnProperty.call(results, stage.id)
+      ? results[stage.id]
+      : 'pass';
+    if (!valid.has(outcome)) {
+      throw new Error(`Invalid outcome for ${stage.id}: ${outcome}`);
+    }
+
+    reached = stage.id;
+
+    if (!stage.gate) {
+      if (outcome === 'fail') advisories.push(stage.id);
+      stages.push({ id: stage.id, outcome, blocked: false });
+      continue;
+    }
+
+    const blocked = outcome === 'fail';
+    stages.push({ id: stage.id, outcome, blocked });
+
+    if (blocked) {
+      blockedAt = stage.id;
+      break;
+    }
+  }
+
+  return {
+    status: blockedAt ? 'blocked' : 'passed',
+    reached,
+    blockedAt,
+    advisories,
+    stages,
+  };
+}
