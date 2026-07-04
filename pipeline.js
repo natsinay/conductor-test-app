@@ -87,6 +87,24 @@ export function getFooterYear() {
 }
 
 /**
+ * Converts text to a URL-friendly slug.
+ * Lowercases, trims whitespace, replaces runs of non-alphanumeric characters
+ * with single hyphens, and strips leading/trailing hyphens.
+ *
+ * @param {string} text - The text to slugify
+ * @returns {string} The slugified text
+ * @example
+ * slugify(" Hello, World! ") // returns "hello-world"
+ */
+export function slugify(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
  * Keyboard event handler for the pipeline shortcut key.
  * When the user presses 'T' (or 't'), scrolls to the pipeline section.
  *
