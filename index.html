@@ -123,7 +123,89 @@
     </footer>
 
     <script type="module">
-      import { STAGES, getFooterYear, handlePipelineShortcutKey } from './pipeline.js';
+      // pipeline.js — inline version for local file:// support
+      // This code is duplicated in pipeline.js for testing purposes.
+      // Both files must be kept in sync.
+
+      /**
+       * The ordered stages of the Conductor pipeline.
+       * `gate: true`  -> a failing/blocked stage stops the run.
+       * `gate: false` -> the stage is advisory and never blocks.
+       */
+      const STAGES = [
+        {
+          id: 'spec-gate',
+          name: 'Spec Gate',
+          gate: true,
+          summary: 'Confirms the change has an approved spec before any work starts.',
+        },
+        {
+          id: 'build',
+          name: 'Build',
+          gate: true,
+          summary: 'Compiles the change and runs the automated test suite.',
+        },
+        {
+          id: 'advisory-review',
+          name: 'Advisory Review',
+          gate: false,
+          summary: 'Surfaces non-blocking suggestions and risks for humans to weigh.',
+        },
+        {
+          id: 'execution-gate',
+          name: 'Execution Gate',
+          gate: true,
+          summary: 'Approves running the change against real, live resources.',
+        },
+        {
+          id: 'merge-gate',
+          name: 'Merge Gate',
+          gate: true,
+          summary: 'Final human sign-off before the change lands on the main line.',
+        },
+        {
+          id: 'promote',
+          name: 'Promote',
+          gate: true,
+          summary: 'Rolls the merged change out to the production environment.',
+        },
+      ];
+
+      /**
+       * Returns the current four-digit calendar year as a string.
+       * Used by the page footer ("Built by Conductor · <year>").
+       *
+       * @returns {string} e.g. "2025"
+       */
+      function getFooterYear() {
+        return String(new Date().getFullYear());
+      }
+
+      /**
+       * Keyboard event handler for the pipeline shortcut key.
+       * When the user presses 'T' (or 't'), scrolls to the pipeline section.
+       *
+       * @param {KeyboardEvent} event - The keydown event
+       * @returns {void}
+       */
+      function handlePipelineShortcutKey(event) {
+        // Only respond to 'T' or 't' key presses
+        if (event.key !== 'T' && event.key !== 't') {
+          return;
+        }
+
+        // Don't trigger if user is typing in an input field
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+          return;
+        }
+
+        const pipelineHeading = document.getElementById('pipeline-heading');
+        if (pipelineHeading) {
+          pipelineHeading.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      // --- Page initialization ---
 
       // Progressively enhance the pipeline map from the shared module so the
       // page and the tests can never drift out of sync.
