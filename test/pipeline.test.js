@@ -10,6 +10,7 @@ import {
   evaluateRun,
   getFooterYear,
   handlePipelineShortcutKey,
+  wordCount,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -169,4 +170,55 @@ test('handlePipelineShortcutKey ignores other keys', () => {
   const mockEventOther = { key: 'x', target: { tagName: 'DIV' } };
   handlePipelineShortcutKey(mockEventOther, { document: mockDocument });
   assert.equal(scrolled, false, 'Should not scroll for other keys');
+});
+
+// wordCount tests
+
+test('wordCount returns 0 for empty string', () => {
+  assert.equal(wordCount(''), 0);
+});
+
+test('wordCount returns 0 for null', () => {
+  assert.equal(wordCount(null), 0);
+});
+
+test('wordCount returns 0 for undefined', () => {
+  assert.equal(wordCount(undefined), 0);
+});
+
+test('wordCount returns 0 for whitespace-only string', () => {
+  assert.equal(wordCount('   '), 0);
+  assert.equal(wordCount('\t\t'), 0);
+  assert.equal(wordCount('\n\n'), 0);
+  assert.equal(wordCount('  \t\n  '), 0);
+});
+
+test('wordCount returns 1 for single word', () => {
+  assert.equal(wordCount('hello'), 1);
+  assert.equal(wordCount('world'), 1);
+  assert.equal(wordCount('Conductor'), 1);
+});
+
+test('wordCount handles multiple words separated by spaces', () => {
+  assert.equal(wordCount('hello world'), 2);
+  assert.equal(wordCount('one two three'), 3);
+  assert.equal(wordCount('a b c d e'), 5);
+});
+
+test('wordCount handles multiple spaces between words', () => {
+  assert.equal(wordCount('hello   world'), 2);
+  assert.equal(wordCount('one    two     three'), 3);
+  assert.equal(wordCount('  hello   world  '), 2);
+});
+
+test('wordCount handles newlines as word separators', () => {
+  assert.equal(wordCount('hello\nworld'), 2);
+  assert.equal(wordCount('one\ntwo\nthree'), 3);
+  assert.equal(wordCount('hello\nworld\ntest'), 3);
+});
+
+test('wordCount handles mixed whitespace (spaces, tabs, newlines)', () => {
+  assert.equal(wordCount('hello\tworld'), 2);
+  assert.equal(wordCount('hello\n\tworld'), 2);
+  assert.equal(wordCount('one  \n  two\t\tthree'), 3);
 });

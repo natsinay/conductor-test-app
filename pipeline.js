@@ -87,6 +87,24 @@ export function getFooterYear() {
 }
 
 /**
+ * Counts the number of whitespace-separated words in a text string.
+ * Returns 0 for empty, null, or whitespace-only input.
+ *
+ * @param {string|null|undefined} text - The text to count words in
+ * @returns {number} The number of words
+ */
+export function wordCount(text) {
+  if (!text || typeof text !== 'string') {
+    return 0;
+  }
+  const trimmed = text.trim();
+  if (trimmed === '') {
+    return 0;
+  }
+  return trimmed.split(/\s+/).length;
+}
+
+/**
  * Keyboard event handler for the pipeline shortcut key.
  * When the user presses 'T' (or 't'), scrolls to the pipeline section.
  *
