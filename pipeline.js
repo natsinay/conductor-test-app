@@ -87,6 +87,45 @@ export function getFooterYear() {
 }
 
 /**
+ * Format a duration in seconds into a human-readable string.
+ *
+ * @param {number} seconds - Duration in seconds (non-negative integer)
+ * @returns {string} Formatted duration
+ *
+ * Examples:
+ *   - 0 -> "0s"
+ *   - 45 -> "45s"
+ *   - 90 -> "1m 30s"
+ *   - 3661 -> "1h 01m" (hours zero-pad minutes to 2 digits)
+ */
+export function formatDuration(seconds) {
+  if (seconds === 0) {
+    return '0s';
+  }
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+    // When we have hours, always include minutes (zero-padded to 2 digits)
+    parts.push(`${String(minutes).padStart(2, '0')}m`);
+  } else if (minutes > 0) {
+    parts.push(`${minutes}m`);
+    if (secs > 0) {
+      parts.push(`${secs}s`);
+    }
+  } else {
+    parts.push(`${secs}s`);
+  }
+
+  return parts.join(' ');
+}
+
+/**
  * Keyboard event handler for the pipeline shortcut key.
  * When the user presses 'T' (or 't'), scrolls to the pipeline section.
  *
