@@ -10,6 +10,7 @@ import {
   evaluateRun,
   getFooterYear,
   handlePipelineShortcutKey,
+  formatDuration,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -169,4 +170,38 @@ test('handlePipelineShortcutKey ignores other keys', () => {
   const mockEventOther = { key: 'x', target: { tagName: 'DIV' } };
   handlePipelineShortcutKey(mockEventOther, { document: mockDocument });
   assert.equal(scrolled, false, 'Should not scroll for other keys');
+});
+
+// formatDuration tests
+
+test('formatDuration returns "0s" for zero', () => {
+  assert.equal(formatDuration(0), '0s');
+});
+
+test('formatDuration formats sub-minute durations', () => {
+  assert.equal(formatDuration(45), '45s');
+  assert.equal(formatDuration(1), '1s');
+  assert.equal(formatDuration(59), '59s');
+});
+
+test('formatDuration formats exact minute durations', () => {
+  assert.equal(formatDuration(60), '1m');
+  assert.equal(formatDuration(120), '2m');
+  assert.equal(formatDuration(300), '5m');
+});
+
+test('formatDuration formats minute + seconds durations', () => {
+  assert.equal(formatDuration(90), '1m 30s');
+  assert.equal(formatDuration(61), '1m 1s');
+  assert.equal(formatDuration(119), '1m 59s');
+  assert.equal(formatDuration(150), '2m 30s');
+});
+
+test('formatDuration formats hour durations with zero-padded minutes', () => {
+  assert.equal(formatDuration(3661), '1h 01m');
+  assert.equal(formatDuration(3600), '1h 00m');
+  assert.equal(formatDuration(3665), '1h 01m');
+  assert.equal(formatDuration(3720), '1h 02m');
+  assert.equal(formatDuration(7200), '2h 00m');
+  assert.equal(formatDuration(7320), '2h 02m');
 });
