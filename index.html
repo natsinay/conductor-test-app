@@ -158,6 +158,9 @@
       <p class="footer__shortcut">
         Press <kbd>T</kbd> to jump to the pipeline section · Press <kbd>Ctrl+F</kbd> to search
       </p>
+      <p class="footer__wordcount">
+        Word count: <span data-testid="word-count"></span>
+      </p>
       <p class="footer__credit">
         Built by Conductor · <span id="footer-year"></span>
       </p>
@@ -223,6 +226,24 @@
        */
       function getFooterYear() {
         return String(new Date().getFullYear());
+      }
+
+      /**
+       * Counts the number of whitespace-separated words in a text string.
+       * Returns 0 for empty, null, or whitespace-only input.
+       *
+       * @param {string|null|undefined} text - The text to count words in
+       * @returns {number} The number of words
+       */
+      function wordCount(text) {
+        if (!text || typeof text !== 'string') {
+          return 0;
+        }
+        const trimmed = text.trim();
+        if (trimmed === '') {
+          return 0;
+        }
+        return trimmed.split(/\s+/).length;
       }
 
       /**
@@ -518,6 +539,16 @@
       const yearEl = document.getElementById('footer-year');
       if (yearEl) {
         yearEl.textContent = getFooterYear();
+      }
+
+      // Calculate and display word count of main content
+      const wordCountEl = document.querySelector('[data-testid="word-count"]');
+      if (wordCountEl) {
+        const mainContent = document.querySelector('main');
+        if (mainContent) {
+          const count = wordCount(mainContent.textContent);
+          wordCountEl.textContent = count;
+        }
       }
 
       // Register keyboard shortcut handler.
