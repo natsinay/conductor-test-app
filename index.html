@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Conductor — the change pipeline</title>
+    <title>Maestro — the change pipeline</title>
     <meta
       name="description"
-      content="How the Conductor platform moves a change from spec to production through a sequence of gates."
+      content="How the Maestro platform moves a change from spec to production through a sequence of gates."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -57,10 +57,10 @@
 
     <header class="hero">
       <div class="wrap">
-        <p class="eyebrow">Conductor platform</p>
+        <p class="eyebrow">Maestro platform</p>
         <h1>Every change takes the same well-lit path.</h1>
         <p class="lede">
-          Conductor moves a change through a fixed pipeline. Most stages are
+          Maestro moves a change through a fixed pipeline. Most stages are
           <strong>gates</strong> that can stop the run; one is
           <strong>advisory</strong> and only offers guidance. The same
           <code>pipeline.js</code> module that renders the map below is unit
@@ -172,7 +172,7 @@
       // Both files must be kept in sync.
 
       /**
-       * The ordered stages of the Conductor pipeline.
+       * The ordered stages of the Maestro pipeline.
        * `gate: true`  -> a failing/blocked stage stops the run.
        * `gate: false` -> the stage is advisory and never blocks.
        */
@@ -431,103 +431,47 @@
         }
         
         init() {
-          this.zoomInBtn.addEventListener('click', () => this.zoom(1));
-          this.zoomOutBtn.addEventListener('click', () => this.zoom(-1));
-          
-          // Keyboard shortcuts
-          document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            // Ctrl/Cmd + Plus to zoom in
-            if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
-              e.preventDefault();
-              this.zoom(1);
-            }
-            // Ctrl/Cmd + Minus to zoom out
-            if ((e.ctrlKey || e.metaKey) && e.key === '-') {
-              e.preventDefault();
-              this.zoom(-1);
-            }
-            // Ctrl/Cmd + 0 to reset zoom
-            if ((e.ctrlKey || e.metaKey) && e.key === '0') {
-              e.preventDefault();
-              this.resetZoom();
-            }
-          });
-          
-          this.updateDisplay();
+          this.zoomInBtn.addEventListener('click', () => this.adjustZoom(this.zoomStep));
+          this.zoomOutBtn.addEventListener('click', () => this.adjustZoom(-this.zoomStep));
         }
         
-        zoom(direction) {
-          const newZoom = this.currentZoom + (direction * this.zoomStep);
+        adjustZoom(delta) {
+          const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.currentZoom + delta));
+          this.currentZoom = newZoom;
+          this.zoomLevelDisplay.textContent = `${newZoom}%`;
           
-          if (newZoom >= this.minZoom && newZoom <= this.maxZoom) {
-            this.currentZoom = newZoom;
-            this.applyZoom();
-            this.updateDisplay();
-          }
-        }
-        
-        resetZoom() {
-          this.currentZoom = 100;
-          this.applyZoom();
-          this.updateDisplay();
-        }
-        
-        applyZoom() {
-          document.documentElement.style.fontSize = `${16 * (this.currentZoom / 100)}px`;
-        }
-        
-        updateDisplay() {
-          this.zoomLevelDisplay.textContent = `${this.currentZoom}%`;
-          
-          // Update button states
-          this.zoomInBtn.disabled = this.currentZoom >= this.maxZoom;
-          this.zoomOutBtn.disabled = this.currentZoom <= this.minZoom;
-          
-          this.zoomInBtn.classList.toggle('disabled', this.currentZoom >= this.maxZoom);
-          this.zoomOutBtn.classList.toggle('disabled', this.currentZoom <= this.minZoom);
+          // Apply zoom to the document
+          document.documentElement.style.fontSize = `${newZoom}%`;
         }
       }
 
-      // --- Page initialization ---
-
-      // Progressively enhance the pipeline map from the shared module so the
-      // page and the tests can never drift out of sync.
-      const list = document.getElementById('pipeline-map');
-      if (list) {
-        list.innerHTML = '';
-        for (const stage of STAGES) {
-          const li = document.createElement('li');
-          li.className = stage.gate ? 'is-gate' : 'is-advisory';
-          const link = document.createElement('a');
-          link.href = `#${stage.id}`;
-          link.textContent = stage.name;
-          li.append(link);
-          li.append(
-            Object.assign(document.createElement('span'), {
-              className: 'pipeline__note',
-              textContent: stage.summary,
-            }),
-          );
-          list.append(li);
+      // ============================================
+      // INITIALIZATION
+      // ============================================
+      
+      function init() {
+        // Footer year
+        const footerYearEl = document.getElementById('footer-year');
+        if (footerYearEl) {
+          footerYearEl.textContent = getFooterYear();
         }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', handlePipelineShortcutKey);
+        
+        // Initialize search
+        new SearchHighlighter();
+        
+        // Initialize zoom
+        new ZoomController();
       }
-
-      // Stamp the footer year using the shared helper.
-      const yearEl = document.getElementById('footer-year');
-      if (yearEl) {
-        yearEl.textContent = getFooterYear();
+      
+      // Run on DOMContentLoaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
       }
-
-      // Register keyboard shortcut handler.
-      document.addEventListener('keydown', handlePipelineShortcutKey);
-
-      // Initialize Search Highlighter
-      const highlighter = new SearchHighlighter();
-
-      // Initialize Zoom Controller
-      const zoomController = new ZoomController();
     </script>
   </body>
 </html>
