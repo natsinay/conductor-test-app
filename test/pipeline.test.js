@@ -10,6 +10,7 @@ import {
   evaluateRun,
   getFooterYear,
   handlePipelineShortcutKey,
+  slugify,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -169,4 +170,78 @@ test('handlePipelineShortcutKey ignores other keys', () => {
   const mockEventOther = { key: 'x', target: { tagName: 'DIV' } };
   handlePipelineShortcutKey(mockEventOther, { document: mockDocument });
   assert.equal(scrolled, false, 'Should not scroll for other keys');
+});
+
+// ============================================
+// SLUGIFY TESTS
+// ============================================
+
+test('slugify converts text to lowercase', () => {
+  assert.equal(slugify('Hello World'), 'hello-world');
+  assert.equal(slugify('HELLO WORLD'), 'hello-world');
+  assert.equal(slugify('HeLLo WoRLD'), 'hello-world');
+});
+
+test('slugify trims leading and trailing whitespace', () => {
+  assert.equal(slugify('  hello world  '), 'hello-world');
+  assert.equal(slugify('\thello world\t'), 'hello-world');
+  assert.equal(slugify('\nhello world\n'), 'hello-world');
+});
+
+test('slugify replaces runs of non-alphanumeric characters with single hyphens', () => {
+  assert.equal(slugify('hello world'), 'hello-world');
+  assert.equal(slugify('hello   world'), 'hello-world');
+  assert.equal(slugify('hello---world'), 'hello-world');
+  assert.equal(slugify('hello   ---   world'), 'hello-world');
+});
+
+test('slugify handles punctuation correctly', () => {
+  assert.equal(slugify('Hello, World!'), 'hello-world');
+  assert.equal(slugify('What? Why! How...'), 'what-why-how');
+  assert.equal(slugify('foo@bar.com'), 'foo-bar-com');
+  assert.equal(slugify('a (b) [c] {d}'), 'a-b-c-d');
+});
+
+test('slugify strips leading and trailing hyphens', () => {
+  assert.equal(slugify('---hello world---'), 'hello-world');
+  assert.equal(slugify('!!!hello world!!!'), 'hello-world');
+  assert.equal(slugify('   hello world   '), 'hello-world');
+  assert.equal(slugify('-hello world-'), 'hello-world');
+});
+
+test('slugify handles mixed punctuation and whitespace', () => {
+  assert.equal(slugify(' Hello, World! '), 'hello-world');
+  assert.equal(slugify('  ---  Hello, World!  ---  '), 'hello-world');
+  assert.equal(slugify('...test...'), 'test');
+});
+
+test('slugify preserves numbers', () => {
+  assert.equal(slugify('Test 123'), 'test-123');
+  assert.equal(slugify('Version 2.0'), 'version-2-0');
+  assert.equal(slugify('Item #5'), 'item-5');
+});
+
+test('slugify handles single word input', () => {
+  assert.equal(slugify('Hello'), 'hello');
+  assert.equal(slugify('  Hello  '), 'hello');
+  assert.equal(slugify('!!!Hello!!!'), 'hello');
+});
+
+test('slugify handles empty and whitespace-only strings', () => {
+  assert.equal(slugify(''), '');
+  assert.equal(slugify('   '), '');
+  assert.equal(slugify('\t\n'), '');
+});
+
+test('slugify handles strings that become empty after processing', () => {
+  assert.equal(slugify('!!!'), '');
+  assert.equal(slugify('---'), '');
+  assert.equal(slugify('...'), '');
+});
+
+test('slugify produces valid HTML id attributes', () => {
+  // IDs must start with a letter, but slugify doesn't enforce this
+  // It just ensures no leading/trailing hyphens and no consecutive hyphens
+  assert.match(slugify('Hello World'), /^[a-z0-9]+(-[a-z0-9]+)*$/);
+  assert.match(slugify('Test 123 ABC'), /^[a-z0-9]+(-[a-z0-9]+)*$/);
 });
