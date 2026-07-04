@@ -10,6 +10,7 @@ import {
   evaluateRun,
   getFooterYear,
   handlePipelineShortcutKey,
+  shouldShowBackToTop,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -169,4 +170,20 @@ test('handlePipelineShortcutKey ignores other keys', () => {
   const mockEventOther = { key: 'x', target: { tagName: 'DIV' } };
   handlePipelineShortcutKey(mockEventOther, { document: mockDocument });
   assert.equal(scrolled, false, 'Should not scroll for other keys');
+});
+
+// ============================================
+// BACK TO TOP VISIBILITY TESTS
+// ============================================
+
+test('shouldShowBackToTop returns false at scrollY 0', () => {
+  assert.equal(shouldShowBackToTop(0), false);
+});
+
+test('shouldShowBackToTop returns false at scrollY 300', () => {
+  assert.equal(shouldShowBackToTop(300), false);
+});
+
+test('shouldShowBackToTop returns true at scrollY 301', () => {
+  assert.equal(shouldShowBackToTop(301), true);
 });

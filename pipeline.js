@@ -87,6 +87,17 @@ export function getFooterYear() {
 }
 
 /**
+ * Determines whether the "Back to top" button should be visible.
+ * The button should appear when the user has scrolled past 300px.
+ *
+ * @param {number} scrollY - The current vertical scroll position in pixels
+ * @returns {boolean} True when scrollY > 300, false otherwise
+ */
+export function shouldShowBackToTop(scrollY) {
+  return scrollY > 300;
+}
+
+/**
  * Keyboard event handler for the pipeline shortcut key.
  * When the user presses 'T' (or 't'), scrolls to the pipeline section.
  *

@@ -166,6 +166,13 @@
       </p>
     </footer>
 
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="back-to-top" title="Back to top" aria-label="Back to top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 15l-6-6-6 6"/>
+      </svg>
+    </button>
+
     <script type="module">
       // pipeline.js — inline version for local file:// support
       // This code is duplicated in pipeline.js for testing purposes.
@@ -223,6 +230,17 @@
        */
       function getFooterYear() {
         return String(new Date().getFullYear());
+      }
+
+      /**
+       * Determines whether the "Back to top" button should be visible.
+       * The button should appear when the user has scrolled past 300px.
+       *
+       * @param {number} scrollY - The current vertical scroll position in pixels
+       * @returns {boolean} True when scrollY > 300, false otherwise
+       */
+      function shouldShowBackToTop(scrollY) {
+        return scrollY > 300;
       }
 
       /**
@@ -528,6 +546,42 @@
 
       // Initialize Zoom Controller
       const zoomController = new ZoomController();
+
+      // ============================================
+      // BACK TO TOP FUNCTIONALITY
+      // ============================================
+
+      class BackToTopController {
+        constructor() {
+          this.button = document.getElementById('back-to-top');
+          this.init();
+        }
+
+        init() {
+          if (!this.button) return;
+
+          // Show/hide button based on scroll position
+          window.addEventListener('scroll', () => this.updateVisibility());
+
+          // Scroll to top on click
+          this.button.addEventListener('click', () => this.scrollToTop());
+
+          // Initial state
+          this.updateVisibility();
+        }
+
+        updateVisibility() {
+          const shouldShow = shouldShowBackToTop(window.scrollY);
+          this.button.classList.toggle('back-to-top--visible', shouldShow);
+        }
+
+        scrollToTop() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+
+      // Initialize Back to Top Controller
+      const backToTopController = new BackToTopController();
     </script>
   </body>
 </html>
