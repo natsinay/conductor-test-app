@@ -87,6 +87,38 @@ export function getFooterYear() {
 }
 
 /**
+ * Keyboard event handler for the pipeline shortcut key.
+ * When the user presses 'T' (or 't'), scrolls to the pipeline section.
+ *
+ * @param {KeyboardEvent} event - The keydown event
+ * @param {Object} [options] - Optional dependencies for testing
+ * @param {Document} [options.document] - Document object (defaults to global)
+ * @returns {void}
+ */
+export function handlePipelineShortcutKey(event, options = {}) {
+  // Only respond to 'T' or 't' key presses
+  if (event.key !== 'T' && event.key !== 't') {
+    return;
+  }
+
+  // Don't trigger if user is typing in an input field
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+    return;
+  }
+
+  // Use provided document or global document (for Node.js test compatibility)
+  const doc = options.document || (typeof document !== 'undefined' ? document : null);
+  if (!doc) {
+    return;
+  }
+
+  const pipelineHeading = doc.getElementById('pipeline-heading');
+  if (pipelineHeading) {
+    pipelineHeading.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+/**
  * Evaluate a run through the pipeline.
  *
  * @param {Record<string, ('pass'|'fail'|'skip')>} results

@@ -9,6 +9,7 @@ import {
   nextStage,
   evaluateRun,
   getFooterYear,
+  handlePipelineShortcutKey,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -102,4 +103,70 @@ test('getFooterYear returns the current four-digit year as a string', () => {
   assert.equal(typeof year, 'string');
   assert.match(year, /^\d{4}$/);
   assert.equal(year, String(new Date().getFullYear()));
+});
+
+test('handlePipelineShortcutKey function exists and is a function', () => {
+  assert.equal(typeof handlePipelineShortcutKey, 'function');
+});
+
+test('handlePipelineShortcutKey responds to T and t keys with mock document', () => {
+  // Create a mock document with the pipeline-heading element
+  let scrolledElement = null;
+  const mockDocument = {
+    getElementById: (id) => {
+      if (id === 'pipeline-heading') {
+        return {
+          scrollIntoView: (options) => {
+            scrolledElement = { id, options };
+          },
+        };
+      }
+      return null;
+    },
+  };
+
+  // Test lowercase 't'
+  const mockEventLower = { key: 't', target: { tagName: 'DIV' } };
+  handlePipelineShortcutKey(mockEventLower, { document: mockDocument });
+  assert.ok(scrolledElement, 'Should have scrolled for lowercase t');
+  assert.equal(scrolledElement.id, 'pipeline-heading');
+  assert.deepEqual(scrolledElement.options, { behavior: 'smooth' });
+
+  // Reset and test uppercase 'T'
+  scrolledElement = null;
+  const mockEventUpper = { key: 'T', target: { tagName: 'DIV' } };
+  handlePipelineShortcutKey(mockEventUpper, { document: mockDocument });
+  assert.ok(scrolledElement, 'Should have scrolled for uppercase T');
+});
+
+test('handlePipelineShortcutKey ignores keypresses in input fields', () => {
+  let scrolled = false;
+  const mockDocument = {
+    getElementById: () => {
+      scrolled = true;
+      return { scrollIntoView: () => {} };
+    },
+  };
+
+  const mockEventInput = { key: 't', target: { tagName: 'INPUT' } };
+  handlePipelineShortcutKey(mockEventInput, { document: mockDocument });
+  assert.equal(scrolled, false, 'Should not scroll when focused on INPUT');
+
+  const mockEventTextarea = { key: 'T', target: { tagName: 'TEXTAREA' } };
+  handlePipelineShortcutKey(mockEventTextarea, { document: mockDocument });
+  assert.equal(scrolled, false, 'Should not scroll when focused on TEXTAREA');
+});
+
+test('handlePipelineShortcutKey ignores other keys', () => {
+  let scrolled = false;
+  const mockDocument = {
+    getElementById: () => {
+      scrolled = true;
+      return { scrollIntoView: () => {} };
+    },
+  };
+
+  const mockEventOther = { key: 'x', target: { tagName: 'DIV' } };
+  handlePipelineShortcutKey(mockEventOther, { document: mockDocument });
+  assert.equal(scrolled, false, 'Should not scroll for other keys');
 });
