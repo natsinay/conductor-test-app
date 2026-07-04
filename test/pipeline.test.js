@@ -10,6 +10,7 @@ import {
   evaluateRun,
   getFooterYear,
   handlePipelineShortcutKey,
+  nextTheme,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -169,4 +170,31 @@ test('handlePipelineShortcutKey ignores other keys', () => {
   const mockEventOther = { key: 'x', target: { tagName: 'DIV' } };
   handlePipelineShortcutKey(mockEventOther, { document: mockDocument });
   assert.equal(scrolled, false, 'Should not scroll for other keys');
+});
+
+// ============================================
+// THEME TOGGLE TESTS
+// ============================================
+
+test('nextTheme is a pure function that returns the opposite theme', () => {
+  assert.equal(typeof nextTheme, 'function');
+});
+
+test('nextTheme returns "dark" when current is "light"', () => {
+  assert.equal(nextTheme('light'), 'dark');
+});
+
+test('nextTheme returns "light" when current is "dark"', () => {
+  assert.equal(nextTheme('dark'), 'light');
+});
+
+test('nextTheme returns "light" for unknown values (defaults to light)', () => {
+  assert.equal(nextTheme('unknown'), 'light');
+  assert.equal(nextTheme(''), 'light');
+  assert.equal(nextTheme('LIGHT'), 'light');
+  assert.equal(nextTheme('DARK'), 'light');
+  assert.equal(nextTheme(null), 'light');
+  assert.equal(nextTheme(undefined), 'light');
+  assert.equal(nextTheme(123), 'light');
+  assert.equal(nextTheme({}), 'light');
 });

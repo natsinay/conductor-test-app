@@ -1,4 +1,10 @@
-:root {
+/* ============================================
+   THEME VARIABLES
+   ============================================ */
+
+/* Dark theme (default) */
+:root,
+[data-theme="dark"] {
   --bg: #0f1117;
   --surface: #171a23;
   --surface-2: #1e2230;
@@ -11,6 +17,32 @@
   --wrap: 760px;
   --highlight-red: #ff4757;
   --highlight-bg: rgba(255, 71, 87, 0.3);
+  --control-bar-bg: rgba(15, 17, 23, 0.95);
+  --border-color: #262a38;
+  --border-color-hover: #3a3f50;
+  --hero-gradient-start: #12151f;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --yanistan-color: #ffffff;
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --surface-2: #e9ecef;
+  --text: #212529;
+  --muted: #6c757d;
+  --accent: #3366cc;
+  --gate: #d97706;
+  --advisory: #059669;
+  --highlight-red: #dc2626;
+  --highlight-bg: rgba(220, 38, 38, 0.2);
+  --control-bar-bg: rgba(248, 249, 250, 0.95);
+  --border-color: #dee2e6;
+  --border-color-hover: #adb5bd;
+  --hero-gradient-start: #e9ecef;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --yanistan-color: #212529;
 }
 
 * {
@@ -27,7 +59,7 @@ body {
   color: var(--text);
   font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     sans-serif;
-  transition: font-size 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .wrap {
@@ -48,18 +80,18 @@ a {
 }
 
 /* ============================================
-   CONTROL BAR - SEARCH & ZOOM
+   CONTROL BAR - SEARCH & ZOOM & THEME
    ============================================ */
 
 .control-bar {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(15, 17, 23, 0.95);
+  background: var(--control-bar-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #262a38;
+  border-bottom: 1px solid var(--border-color);
   padding: 0.85rem 0;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 20px var(--shadow-color);
 }
 
 .control-bar__inner {
@@ -96,7 +128,7 @@ a {
 #search-input {
   width: 100%;
   background: var(--surface);
-  border: 2px solid #262a38;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 0.6rem 2.2rem 0.6rem 2.5rem;
   color: var(--text);
@@ -161,7 +193,7 @@ a {
 
 .nav-btn {
   background: var(--surface-2);
-  border: 1px solid #262a38;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   color: var(--text);
   padding: 0.25rem 0.5rem;
@@ -186,7 +218,7 @@ a {
   align-items: center;
   justify-content: center;
   background: var(--surface);
-  border: 2px solid #262a38;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   color: var(--text);
   padding: 0.5rem;
@@ -211,6 +243,52 @@ a {
   color: var(--muted);
   min-width: 45px;
   text-align: center;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-toggle__icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Adjust layout to include theme toggle */
+.control-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.utility-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* ============================================
@@ -246,8 +324,8 @@ a {
    ============================================ */
 
 .hero {
-  background: linear-gradient(180deg, #12151f, var(--bg));
-  border-bottom: 1px solid #262a38;
+  background: linear-gradient(180deg, var(--hero-gradient-start), var(--bg));
+  border-bottom: 1px solid var(--border-color);
   padding: 3.5rem 0 2.5rem;
   padding-top: calc(3.5rem + 40px); /* Account for control bar */
 }
@@ -310,7 +388,7 @@ h2 {
 .pipeline li {
   counter-increment: step;
   background: var(--surface);
-  border: 1px solid #262a38;
+  border: 1px solid var(--border-color);
   border-left: 4px solid var(--muted);
   border-radius: var(--radius);
   padding: 0.85rem 1rem;
@@ -319,8 +397,8 @@ h2 {
 
 .pipeline li:hover {
   transform: translateX(4px);
-  border-color: #3a3f50;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-hover);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .pipeline li::before {
@@ -378,7 +456,7 @@ h2 {
 
 .stage {
   background: var(--surface);
-  border: 1px solid #262a38;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   padding: 1.25rem 1.4rem;
   margin-top: 1rem;
@@ -387,8 +465,8 @@ h2 {
 
 .stage:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  border-color: #3a3f50;
+  box-shadow: 0 8px 20px var(--shadow-color);
+  border-color: var(--border-color-hover);
 }
 
 .stage h3 {
@@ -436,7 +514,7 @@ h2 {
    ============================================ */
 
 footer {
-  border-top: 1px solid #262a38;
+  border-top: 1px solid var(--border-color);
   padding: 1.5rem 0 3rem;
   color: var(--muted);
   font-size: 0.9rem;
@@ -458,8 +536,8 @@ kbd {
   font-family: inherit;
   font-size: 0.85em;
   font-weight: 600;
-  border: 1px solid #3a3f50;
-  box-shadow: 0 1px 0 #3a3f50;
+  border: 1px solid var(--border-color-hover);
+  box-shadow: 0 1px 0 var(--border-color-hover);
   margin: 0 0.1em;
 }
 
@@ -475,7 +553,7 @@ kbd {
 }
 
 .yanistan-name {
-  color: #ffffff;
+  color: var(--yanistan-color);
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -495,10 +573,10 @@ kbd {
     max-width: 100%;
   }
   
-  .zoom-controls {
+  .utility-controls {
     justify-content: center;
     padding-top: 0.5rem;
-    border-top: 1px solid #262a38;
+    border-top: 1px solid var(--border-color);
   }
   
   .hero {
@@ -542,4 +620,34 @@ kbd {
     color: white;
     font-weight: bold;
   }
+}
+
+/* ============================================
+   THEME TOGGLE ICON VISIBILITY
+   ============================================ */
+
+.theme-toggle__icon--dark {
+  display: none;
+}
+
+.theme-toggle__icon--light {
+  display: block;
+}
+
+/* Dark theme: show sun icon (to switch to light) */
+[data-theme="dark"] .theme-toggle__icon--dark {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle__icon--light {
+  display: block;
+}
+
+/* Light theme: show moon icon (to switch to dark) */
+[data-theme="light"] .theme-toggle__icon--dark {
+  display: block;
+}
+
+[data-theme="light"] .theme-toggle__icon--light {
+  display: none;
 }

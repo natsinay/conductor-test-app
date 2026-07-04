@@ -9,6 +9,15 @@
       content="How the Conductor platform moves a change from spec to production through a sequence of gates."
     />
     <link rel="stylesheet" href="styles.css" />
+    <script>
+      // Restore saved theme before page renders to avoid flash
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+      })();
+    </script>
   </head>
   <body>
     <!-- Control Bar - Fixed at top -->
@@ -34,21 +43,39 @@
             <button id="next-match" class="nav-btn" title="Next match (Enter)">↓</button>
           </div>
         </div>
-        <div class="zoom-controls">
-          <button id="zoom-out" class="zoom-btn" title="Zoom out (Decrease text size)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-              <path d="M8 11h6"></path>
+        <div class="utility-controls">
+          <div class="zoom-controls">
+            <button id="zoom-out" class="zoom-btn" title="Zoom out (Decrease text size)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+                <path d="M8 11h6"></path>
+              </svg>
+            </button>
+            <span id="zoom-level" class="zoom-level">100%</span>
+            <button id="zoom-in" class="zoom-btn" title="Zoom in (Increase text size)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+                <path d="M11 8v6"></path>
+                <path d="M8 11h6"></path>
+              </svg>
+            </button>
+          </div>
+          <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme">
+            <svg class="theme-toggle__icon theme-toggle__icon--dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
-          </button>
-          <span id="zoom-level" class="zoom-level">100%</span>
-          <button id="zoom-in" class="zoom-btn" title="Zoom in (Increase text size)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-              <path d="M11 8v6"></path>
-              <path d="M8 11h6"></path>
+            <svg class="theme-toggle__icon theme-toggle__icon--light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
           </button>
         </div>
@@ -249,6 +276,70 @@
         }
       }
 
+      /**
+       * Returns the opposite theme from the current theme.
+       * This is a pure function used for theme toggling.
+       *
+       * @param {string} current - The current theme ('light' or 'dark')
+       * @returns {string} The opposite theme ('dark' if current is 'light', 'light' otherwise)
+       */
+      function nextTheme(current) {
+        if (current === 'light') {
+          return 'dark';
+        }
+        return 'light';
+      }
+
+      // ============================================
+      // THEME TOGGLE FUNCTIONALITY
+      // ============================================
+
+      class ThemeToggle {
+        constructor() {
+          this.toggleBtn = document.getElementById('theme-toggle');
+          this.init();
+        }
+
+        init() {
+          this.toggleBtn.addEventListener('click', () => this.toggle());
+
+          // Sync icon with current theme
+          this.updateIcon();
+        }
+
+        getCurrentTheme() {
+          return document.documentElement.getAttribute('data-theme') || 'dark';
+        }
+
+        setTheme(theme) {
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+          this.updateIcon();
+        }
+
+        toggle() {
+          const current = this.getCurrentTheme();
+          const next = nextTheme(current);
+          this.setTheme(next);
+        }
+
+        updateIcon() {
+          const theme = this.getCurrentTheme();
+          const darkIcon = this.toggleBtn.querySelector('.theme-toggle__icon--dark');
+          const lightIcon = this.toggleBtn.querySelector('.theme-toggle__icon--light');
+
+          if (theme === 'light') {
+            // Show dark icon (moon) to indicate "switch to dark"
+            darkIcon.style.display = 'block';
+            lightIcon.style.display = 'none';
+          } else {
+            // Show light icon (sun) to indicate "switch to light"
+            darkIcon.style.display = 'none';
+            lightIcon.style.display = 'block';
+          }
+        }
+      }
+
       // ============================================
       // SEARCH & HIGHLIGHT FUNCTIONALITY
       // ============================================
@@ -427,10 +518,6 @@
           this.maxZoom = 150;
           this.zoomStep = 10;
           
-          this.init();
-        }
-        
-        init() {
           this.zoomInBtn.addEventListener('click', () => this.zoom(1));
           this.zoomOutBtn.addEventListener('click', () => this.zoom(-1));
           
@@ -522,6 +609,9 @@
 
       // Register keyboard shortcut handler.
       document.addEventListener('keydown', handlePipelineShortcutKey);
+
+      // Initialize Theme Toggle
+      const themeToggle = new ThemeToggle();
 
       // Initialize Search Highlighter
       const highlighter = new SearchHighlighter();
