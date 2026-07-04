@@ -119,6 +119,20 @@ export function handlePipelineShortcutKey(event, options = {}) {
 }
 
 /**
+ * Returns the opposite theme from the current theme.
+ * This is a pure function used for theme toggling.
+ *
+ * @param {string} current - The current theme ('light' or 'dark')
+ * @returns {string} The opposite theme ('dark' if current is 'light', 'light' otherwise)
+ */
+export function nextTheme(current) {
+  if (current === 'light') {
+    return 'dark';
+  }
+  return 'light';
+}
+
+/**
  * Evaluate a run through the pipeline.
  *
  * @param {Record<string, ('pass'|'fail'|'skip')>} results
