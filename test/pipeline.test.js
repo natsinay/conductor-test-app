@@ -11,6 +11,11 @@ import {
   getFooterYear,
   handlePipelineShortcutKey,
   shouldShowBackToTop,
+  toggleTheme,
+  getCurrentTheme,
+  validateEmail,
+  validateName,
+  validateOnboardingForm,
 } from '../pipeline.js';
 
 test('STAGES lists the six pipeline stages in order', () => {
@@ -186,4 +191,195 @@ test('shouldShowBackToTop returns false at scrollY 300', () => {
 
 test('shouldShowBackToTop returns true at scrollY 301', () => {
   assert.equal(shouldShowBackToTop(301), true);
+});
+
+// ============================================
+// THEME TOGGLE TESTS
+// ============================================
+
+test('toggleTheme function exists and is a function', () => {
+  assert.equal(typeof toggleTheme, 'function');
+});
+
+test('toggleTheme toggles from dark to light with mock document', () => {
+  let currentTheme = 'dark';
+  const mockDocument = {
+    documentElement: {
+      getAttribute: () => currentTheme,
+      setAttribute: (name, value) => {
+        if (name === 'data-theme') currentTheme = value;
+      },
+    },
+  };
+  
+  const mockStorage = {
+    storedValue: null,
+    setItem: (key, value) => {
+      mockStorage.storedValue = value;
+    },
+  };
+  
+  const result = toggleTheme({ document: mockDocument, storage: mockStorage });
+  assert.equal(result, 'light');
+  assert.equal(currentTheme, 'light');
+  assert.equal(mockStorage.storedValue, 'light');
+});
+
+test('toggleTheme toggles from light to dark with mock document', () => {
+  let currentTheme = 'light';
+  const mockDocument = {
+    documentElement: {
+      getAttribute: () => currentTheme,
+      setAttribute: (name, value) => {
+        if (name === 'data-theme') currentTheme = value;
+      },
+    },
+  };
+  
+  const mockStorage = {
+    storedValue: null,
+    setItem: (key, value) => {
+      mockStorage.storedValue = value;
+    },
+  };
+  
+  const result = toggleTheme({ document: mockDocument, storage: mockStorage });
+  assert.equal(result, 'dark');
+  assert.equal(currentTheme, 'dark');
+  assert.equal(mockStorage.storedValue, 'dark');
+});
+
+test('toggleTheme returns dark when no document is available', () => {
+  const result = toggleTheme({});
+  assert.equal(result, 'dark');
+});
+
+test('getCurrentTheme returns the theme from document', () => {
+  const mockDocument = {
+    documentElement: {
+      hasAttribute: () => true,
+      getAttribute: () => 'light',
+    },
+  };
+  
+  const result = getCurrentTheme({ document: mockDocument });
+  assert.equal(result, 'light');
+});
+
+test('getCurrentTheme returns theme from storage when document has no theme', () => {
+  const mockDocument = {
+    documentElement: {
+      hasAttribute: () => false,
+    },
+  };
+  
+  const mockStorage = {
+    getItem: () => 'dark',
+  };
+  
+  const result = getCurrentTheme({ document: mockDocument, storage: mockStorage });
+  assert.equal(result, 'dark');
+});
+
+test('getCurrentTheme returns dark as default', () => {
+  const result = getCurrentTheme({});
+  assert.equal(result, 'dark');
+});
+
+// ============================================
+// EMAIL VALIDATION TESTS
+// ============================================
+
+test('validateEmail returns true for valid email', () => {
+  assert.equal(validateEmail('test@example.com'), true);
+  assert.equal(validateEmail('user.name@example.org'), true);
+  assert.equal(validateEmail('user+tag@example.co.uk'), true);
+});
+
+test('validateEmail returns false for invalid email', () => {
+  assert.equal(validateEmail('invalid'), false);
+  assert.equal(validateEmail('test@'), false);
+  assert.equal(validateEmail('@example.com'), false);
+  assert.equal(validateEmail('test@example'), false);
+  assert.equal(validateEmail(''), false);
+  assert.equal(validateEmail(null), false);
+  assert.equal(validateEmail(undefined), false);
+  assert.equal(validateEmail(123), false);
+});
+
+test('validateEmail trims whitespace', () => {
+  assert.equal(validateEmail('  test@example.com  '), true);
+});
+
+// ============================================
+// NAME VALIDATION TESTS
+// ============================================
+
+test('validateName returns true for valid names', () => {
+  assert.equal(validateName('John Doe'), true);
+  assert.equal(validateName('Jane'), true);
+  assert.equal(validateName('A B'), true);
+  assert.equal(validateName('Very Long Name That Is Still Valid'), true);
+});
+
+test('validateName returns false for invalid names', () => {
+  assert.equal(validateName('A'), false); // Too short
+  assert.equal(validateName(''), false);
+  assert.equal(validateName(null), false);
+  assert.equal(validateName(undefined), false);
+  assert.equal(validateName(123), false);
+});
+
+test('validateName returns false for names over 100 characters', () => {
+  const longName = 'A'.repeat(101);
+  assert.equal(validateName(longName), false);
+});
+
+test('validateName trims whitespace', () => {
+  assert.equal(validateName('  John Doe  '), true);
+});
+
+// ============================================
+// ONBOARDING FORM VALIDATION TESTS
+// ============================================
+
+test('validateOnboardingForm returns valid for correct data', () => {
+  const result = validateOnboardingForm({
+    name: 'John Doe',
+    email: 'john@example.com',
+  });
+  
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test('validateOnboardingForm returns invalid for missing name', () => {
+  const result = validateOnboardingForm({
+    name: '',
+    email: 'john@example.com',
+  });
+  
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.name);
+});
+
+test('validateOnboardingForm returns invalid for invalid email', () => {
+  const result = validateOnboardingForm({
+    name: 'John Doe',
+    email: 'invalid-email',
+  });
+  
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.email);
+});
+
+test('validateOnboardingForm returns multiple errors for invalid data', () => {
+  const result = validateOnboardingForm({
+    name: '',
+    email: 'invalid',
+  });
+  
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.name);
+  assert.ok(result.errors.email);
 });

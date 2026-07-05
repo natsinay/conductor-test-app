@@ -188,3 +188,117 @@ export function evaluateRun(results = {}) {
     stages,
   };
 }
+
+/**
+ * Toggles between light and dark theme.
+ * Persists the preference in localStorage.
+ *
+ * @param {Object} [options] - Optional dependencies for testing
+ * @param {Document} [options.document] - Document object (defaults to global)
+ * @param {Storage} [options.storage] - Storage object (defaults to localStorage)
+ * @returns {string} The new theme ('light' or 'dark')
+ */
+export function toggleTheme(options = {}) {
+  const doc = options.document || (typeof document !== 'undefined' ? document : null);
+  const storage = options.storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+  
+  if (!doc) {
+    return 'dark';
+  }
+  
+  const currentTheme = doc.documentElement.getAttribute('data-theme') || 'dark';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  
+  doc.documentElement.setAttribute('data-theme', newTheme);
+  
+  if (storage) {
+    storage.setItem('theme', newTheme);
+  }
+  
+  return newTheme;
+}
+
+/**
+ * Gets the current theme from the document or storage.
+ *
+ * @param {Object} [options] - Optional dependencies for testing
+ * @param {Document} [options.document] - Document object (defaults to global)
+ * @param {Storage} [options.storage] - Storage object (defaults to localStorage)
+ * @returns {string} The current theme ('light' or 'dark')
+ */
+export function getCurrentTheme(options = {}) {
+  const doc = options.document || (typeof document !== 'undefined' ? document : null);
+  const storage = options.storage || (typeof localStorage !== 'undefined' ? localStorage : null);
+  
+  // Check document first
+  if (doc && doc.documentElement.hasAttribute('data-theme')) {
+    return doc.documentElement.getAttribute('data-theme');
+  }
+  
+  // Check storage
+  if (storage) {
+    const stored = storage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') {
+      return stored;
+    }
+  }
+  
+  // Default to dark
+  return 'dark';
+}
+
+/**
+ * Validates an email address format.
+ *
+ * @param {string} email - The email address to validate
+ * @returns {boolean} True if the email is valid, false otherwise
+ */
+export function validateEmail(email) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+  
+  // Simple email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
+/**
+ * Validates a customer name.
+ *
+ * @param {string} name - The name to validate
+ * @returns {boolean} True if the name is valid, false otherwise
+ */
+export function validateName(name) {
+  if (!name || typeof name !== 'string') {
+    return false;
+  }
+  
+  const trimmed = name.trim();
+  return trimmed.length >= 2 && trimmed.length <= 100;
+}
+
+/**
+ * Validates customer onboarding form data.
+ *
+ * @param {Object} data - Form data object
+ * @param {string} data.name - Customer name
+ * @param {string} data.email - Customer email
+ * @returns {{ valid: boolean, errors: Record<string, string> }} Validation result
+ */
+export function validateOnboardingForm(data) {
+  const errors = {};
+  
+  if (!validateName(data.name)) {
+    errors.name = 'Please enter a valid name (2-100 characters)';
+  }
+  
+  if (!validateEmail(data.email)) {
+    errors.email = 'Please enter a valid email address';
+  }
+  
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+  };
+}

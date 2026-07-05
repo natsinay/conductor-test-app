@@ -1,3 +1,7 @@
+/* ============================================
+   CSS CUSTOM PROPERTIES (DARK MODE - DEFAULT)
+   ============================================ */
+
 :root {
   --bg: #0f1117;
   --surface: #171a23;
@@ -11,6 +15,33 @@
   --wrap: 760px;
   --highlight-red: #ff4757;
   --highlight-bg: rgba(255, 71, 87, 0.3);
+  --border-color: #262a38;
+  --border-hover: #3a3f50;
+  --input-bg: var(--surface);
+  --btn-primary: var(--accent);
+  --btn-primary-hover: #4a7de0;
+  --success: #6fcf97;
+  --error: #ff4757;
+}
+
+/* ============================================
+   LIGHT MODE THEME
+   ============================================ */
+
+[data-theme="light"] {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #e8ecf1;
+  --text: #1a1d24;
+  --muted: #5a6270;
+  --accent: #4a7de0;
+  --gate: #d4873a;
+  --advisory: #3da864;
+  --border-color: #d1d5db;
+  --border-hover: #9ca3af;
+  --input-bg: #ffffff;
+  --highlight-red: #dc2626;
+  --highlight-bg: rgba(220, 38, 38, 0.15);
 }
 
 * {
@@ -27,7 +58,7 @@ body {
   color: var(--text);
   font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
     sans-serif;
-  transition: font-size 0.2s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .wrap {
@@ -48,7 +79,7 @@ a {
 }
 
 /* ============================================
-   CONTROL BAR - SEARCH & ZOOM
+   CONTROL BAR - SEARCH, ZOOM & THEME TOGGLE
    ============================================ */
 
 .control-bar {
@@ -57,9 +88,13 @@ a {
   z-index: 1000;
   background: rgba(15, 17, 23, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #262a38;
+  border-bottom: 1px solid var(--border-color);
   padding: 0.85rem 0;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .control-bar {
+  background: rgba(245, 247, 250, 0.95);
 }
 
 .control-bar__inner {
@@ -96,7 +131,7 @@ a {
 #search-input {
   width: 100%;
   background: var(--surface);
-  border: 2px solid #262a38;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 0.6rem 2.2rem 0.6rem 2.5rem;
   color: var(--text);
@@ -161,7 +196,7 @@ a {
 
 .nav-btn {
   background: var(--surface-2);
-  border: 1px solid #262a38;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   color: var(--text);
   padding: 0.25rem 0.5rem;
@@ -186,7 +221,7 @@ a {
   align-items: center;
   justify-content: center;
   background: var(--surface);
-  border: 2px solid #262a38;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   color: var(--text);
   padding: 0.5rem;
@@ -211,6 +246,60 @@ a {
   color: var(--muted);
   min-width: 45px;
   text-align: center;
+}
+
+/* ============================================
+   THEME TOGGLE BUTTON
+   ============================================ */
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.theme-toggle__icon {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-toggle__icon {
+  transform: rotate(15deg);
+}
+
+/* Hide moon icon in dark mode, sun icon in light mode */
+.theme-toggle__icon--moon {
+  display: block;
+}
+
+.theme-toggle__icon--sun {
+  display: none;
+}
+
+[data-theme="light"] .theme-toggle__icon--moon {
+  display: none;
+}
+
+[data-theme="light"] .theme-toggle__icon--sun {
+  display: block;
 }
 
 /* ============================================
@@ -247,9 +336,13 @@ a {
 
 .hero {
   background: linear-gradient(180deg, #12151f, var(--bg));
-  border-bottom: 1px solid #262a38;
+  border-bottom: 1px solid var(--border-color);
   padding: 3.5rem 0 2.5rem;
   padding-top: calc(3.5rem + 40px); /* Account for control bar */
+}
+
+[data-theme="light"] .hero {
+  background: linear-gradient(180deg, #e8ecf1, var(--bg));
 }
 
 .eyebrow {
@@ -310,7 +403,7 @@ h2 {
 .pipeline li {
   counter-increment: step;
   background: var(--surface);
-  border: 1px solid #262a38;
+  border: 1px solid var(--border-color);
   border-left: 4px solid var(--muted);
   border-radius: var(--radius);
   padding: 0.85rem 1rem;
@@ -319,7 +412,7 @@ h2 {
 
 .pipeline li:hover {
   transform: translateX(4px);
-  border-color: #3a3f50;
+  border-color: var(--border-hover);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -378,7 +471,7 @@ h2 {
 
 .stage {
   background: var(--surface);
-  border: 1px solid #262a38;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   padding: 1.25rem 1.4rem;
   margin-top: 1rem;
@@ -388,7 +481,7 @@ h2 {
 .stage:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  border-color: #3a3f50;
+  border-color: var(--border-hover);
 }
 
 .stage h3 {
@@ -432,11 +525,146 @@ h2 {
 }
 
 /* ============================================
+   CUSTOMER ONBOARDING FORM
+   ============================================ */
+
+.onboarding-section {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.onboarding-section h2 {
+  border-bottom: none;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0;
+}
+
+.onboarding-section .section-description {
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.form-group label .required {
+  color: var(--error);
+  margin-left: 0.2rem;
+}
+
+.form-input {
+  background: var(--input-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+}
+
+.form-input::placeholder {
+  color: var(--muted);
+}
+
+.form-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-row .form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.submit-btn {
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submit-btn:hover {
+  background: var(--btn-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 141, 239, 0.3);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.submit-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.submit-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.submit-btn:hover svg {
+  transform: translateX(4px);
+}
+
+.onboarding-note {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ============================================
    FOOTER
    ============================================ */
 
 footer {
-  border-top: 1px solid #262a38;
+  border-top: 1px solid var(--border-color);
   padding: 1.5rem 0 3rem;
   color: var(--muted);
   font-size: 0.9rem;
@@ -458,8 +686,8 @@ kbd {
   font-family: inherit;
   font-size: 0.85em;
   font-weight: 600;
-  border: 1px solid #3a3f50;
-  box-shadow: 0 1px 0 #3a3f50;
+  border: 1px solid var(--border-hover);
+  box-shadow: 0 1px 0 var(--border-hover);
   margin: 0 0.1em;
 }
 
@@ -481,6 +709,10 @@ kbd {
   letter-spacing: 0.06em;
 }
 
+[data-theme="light"] .yanistan-name {
+  color: var(--text);
+}
+
 /* ============================================
    RESPONSIVE DESIGN
    ============================================ */
@@ -498,7 +730,7 @@ kbd {
   .zoom-controls {
     justify-content: center;
     padding-top: 0.5rem;
-    border-top: 1px solid #262a38;
+    border-top: 1px solid var(--border-color);
   }
   
   .hero {
@@ -509,6 +741,14 @@ kbd {
     width: 100%;
     justify-content: center;
     margin-top: 0.5rem;
+  }
+  
+  .onboarding-section {
+    padding: 1.5rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
   }
 }
 
@@ -524,7 +764,8 @@ kbd {
   }
   
   .pipeline li:hover,
-  .stage:hover {
+  .stage:hover,
+  .submit-btn:hover {
     transform: none;
   }
 }
@@ -559,7 +800,7 @@ kbd {
   width: 3rem;
   height: 3rem;
   background: var(--surface);
-  border: 2px solid #262a38;
+  border: 2px solid var(--border-color);
   border-radius: var(--radius);
   color: var(--text);
   cursor: pointer;
