@@ -51,6 +51,22 @@
               <path d="M8 11h6"></path>
             </svg>
           </button>
+          <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme" aria-label="Toggle theme">
+            <svg class="theme-toggle__icon theme-toggle__icon--moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg class="theme-toggle__icon theme-toggle__icon--sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -146,6 +162,65 @@
             becomes something users actually run.
           </p>
         </article>
+      </section>
+
+      <!-- Customer Onboarding Section -->
+      <section class="onboarding-section" aria-labelledby="onboarding-heading">
+        <h2 id="onboarding-heading">Customer Onboarding</h2>
+        <p class="section-description">
+          Welcome! Get started with Conductor by providing your details below.
+          We'll set up your account and you'll be ready to use our platform in no time.
+        </p>
+        
+        <form id="onboarding-form" class="onboarding-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="customer-name">
+                Full Name<span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="customer-name" 
+                name="name" 
+                class="form-input" 
+                placeholder="Enter your full name"
+                required
+                autocomplete="name"
+              >
+              <span class="form-hint">Please enter your first and last name</span>
+            </div>
+            
+            <div class="form-group">
+              <label for="customer-email">
+                Email Address<span class="required">*</span>
+              </label>
+              <input 
+                type="email" 
+                id="customer-email" 
+                name="email" 
+                class="form-input" 
+                placeholder="you@example.com"
+                required
+                autocomplete="email"
+              >
+              <span class="form-hint">We'll send your account details to this email</span>
+            </div>
+          </div>
+          
+          <button type="submit" class="submit-btn">
+            Get Started
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+        </form>
+        
+        <p class="onboarding-note">
+          <strong>Privacy Note:</strong> Your information is safe with us. We respect your privacy and will 
+          never share your details with third parties. By submitting this form, you agree to our 
+          Terms of Service and Privacy Policy.
+        </p>
       </section>
     </main>
 
@@ -265,6 +340,29 @@
         if (pipelineHeading) {
           pipelineHeading.scrollIntoView({ behavior: 'smooth' });
         }
+      }
+
+      // ============================================
+      // THEME TOGGLE FUNCTIONALITY
+      // ============================================
+      
+      function initTheme() {
+        // Check for stored preference
+        const stored = localStorage.getItem('theme');
+        if (stored === 'light' || stored === 'dark') {
+          document.documentElement.setAttribute('data-theme', stored);
+        } else {
+          // Default to dark
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      }
+      
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        return newTheme;
       }
 
       // ============================================
@@ -437,151 +535,222 @@
       
       class ZoomController {
         constructor() {
-          this.zoomInBtn = document.getElementById('zoom-in');
-          this.zoomOutBtn = document.getElementById('zoom-out');
-          this.zoomLevelDisplay = document.getElementById('zoom-level');
+          this.zoomIn = document.getElementById('zoom-in');
+          this.zoomOut = document.getElementById('zoom-out');
+          this.zoomLevel = document.getElementById('zoom-level');
           this.currentZoom = 100;
           this.minZoom = 70;
           this.maxZoom = 150;
-          this.zoomStep = 10;
+          this.step = 10;
           
           this.init();
         }
         
         init() {
-          this.zoomInBtn.addEventListener('click', () => this.zoom(1));
-          this.zoomOutBtn.addEventListener('click', () => this.zoom(-1));
+          // Load stored zoom preference
+          const stored = localStorage.getItem('zoom-level');
+          if (stored) {
+            const parsed = parseInt(stored, 10);
+            if (!isNaN(parsed) && parsed >= this.minZoom && parsed <= this.maxZoom) {
+              this.currentZoom = parsed;
+              this.applyZoom();
+            }
+          }
+          
+          this.zoomIn.addEventListener('click', () => this.increaseZoom());
+          this.zoomOut.addEventListener('click', () => this.decreaseZoom());
           
           // Keyboard shortcuts
           document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            // Ctrl/Cmd + Plus to zoom in
-            if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+            if (e.ctrlKey && e.key === '=') {
               e.preventDefault();
-              this.zoom(1);
+              this.increaseZoom();
             }
-            // Ctrl/Cmd + Minus to zoom out
-            if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+            if (e.ctrlKey && e.key === '-') {
               e.preventDefault();
-              this.zoom(-1);
+              this.decreaseZoom();
             }
-            // Ctrl/Cmd + 0 to reset zoom
-            if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            if (e.ctrlKey && e.key === '0') {
               e.preventDefault();
               this.resetZoom();
             }
           });
-          
-          this.updateDisplay();
         }
         
-        zoom(direction) {
-          const newZoom = this.currentZoom + (direction * this.zoomStep);
-          
-          if (newZoom >= this.minZoom && newZoom <= this.maxZoom) {
-            this.currentZoom = newZoom;
+        increaseZoom() {
+          if (this.currentZoom < this.maxZoom) {
+            this.currentZoom += this.step;
             this.applyZoom();
-            this.updateDisplay();
+            this.saveZoom();
+          }
+        }
+        
+        decreaseZoom() {
+          if (this.currentZoom > this.minZoom) {
+            this.currentZoom -= this.step;
+            this.applyZoom();
+            this.saveZoom();
           }
         }
         
         resetZoom() {
           this.currentZoom = 100;
           this.applyZoom();
-          this.updateDisplay();
+          this.saveZoom();
         }
         
         applyZoom() {
-          document.documentElement.style.fontSize = `${16 * (this.currentZoom / 100)}px`;
+          document.body.style.fontSize = `${this.currentZoom}%`;
+          this.zoomLevel.textContent = `${this.currentZoom}%`;
+          this.updateButtonStates();
         }
         
-        updateDisplay() {
-          this.zoomLevelDisplay.textContent = `${this.currentZoom}%`;
-          
-          // Update button states
-          this.zoomInBtn.disabled = this.currentZoom >= this.maxZoom;
-          this.zoomOutBtn.disabled = this.currentZoom <= this.minZoom;
-          
-          this.zoomInBtn.classList.toggle('disabled', this.currentZoom >= this.maxZoom);
-          this.zoomOutBtn.classList.toggle('disabled', this.currentZoom <= this.minZoom);
+        saveZoom() {
+          localStorage.setItem('zoom-level', this.currentZoom);
+        }
+        
+        updateButtonStates() {
+          this.zoomIn.classList.toggle('disabled', this.currentZoom >= this.maxZoom);
+          this.zoomOut.classList.toggle('disabled', this.currentZoom <= this.minZoom);
         }
       }
 
-      // --- Page initialization ---
-
-      // Progressively enhance the pipeline map from the shared module so the
-      // page and the tests can never drift out of sync.
-      const list = document.getElementById('pipeline-map');
-      if (list) {
-        list.innerHTML = '';
-        for (const stage of STAGES) {
+      // ============================================
+      // PIPELINE MAP RENDERER
+      // ============================================
+      
+      function renderPipelineMap() {
+        const mapEl = document.getElementById('pipeline-map');
+        if (!mapEl) return;
+        
+        // Clear static fallback
+        mapEl.innerHTML = '';
+        
+        STAGES.forEach((stage, index) => {
           const li = document.createElement('li');
           li.className = stage.gate ? 'is-gate' : 'is-advisory';
+          
           const link = document.createElement('a');
           link.href = `#${stage.id}`;
           link.textContent = stage.name;
-          li.append(link);
-          li.append(
-            Object.assign(document.createElement('span'), {
-              className: 'pipeline__note',
-              textContent: stage.summary,
-            }),
-          );
-          list.append(li);
-        }
+          
+          const note = document.createElement('span');
+          note.className = 'pipeline__note';
+          note.textContent = stage.summary;
+          
+          li.appendChild(link);
+          li.appendChild(note);
+          mapEl.appendChild(li);
+        });
       }
-
-      // Stamp the footer year using the shared helper.
-      const yearEl = document.getElementById('footer-year');
-      if (yearEl) {
-        yearEl.textContent = getFooterYear();
-      }
-
-      // Register keyboard shortcut handler.
-      document.addEventListener('keydown', handlePipelineShortcutKey);
-
-      // Initialize Search Highlighter
-      const highlighter = new SearchHighlighter();
-
-      // Initialize Zoom Controller
-      const zoomController = new ZoomController();
 
       // ============================================
-      // BACK TO TOP FUNCTIONALITY
+      // ONBOARDING FORM HANDLING
       // ============================================
-
-      class BackToTopController {
-        constructor() {
-          this.button = document.getElementById('back-to-top');
-          this.init();
-        }
-
-        init() {
-          if (!this.button) return;
-
-          // Show/hide button based on scroll position
-          window.addEventListener('scroll', () => this.updateVisibility());
-
-          // Scroll to top on click
-          this.button.addEventListener('click', () => this.scrollToTop());
-
-          // Initial state
-          this.updateVisibility();
-        }
-
-        updateVisibility() {
-          const shouldShow = shouldShowBackToTop(window.scrollY);
-          this.button.classList.toggle('back-to-top--visible', shouldShow);
-        }
-
-        scrollToTop() {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+      
+      function initOnboardingForm() {
+        const form = document.getElementById('onboarding-form');
+        if (!form) return;
+        
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          
+          const nameInput = document.getElementById('customer-name');
+          const emailInput = document.getElementById('customer-email');
+          
+          const name = nameInput.value.trim();
+          const email = emailInput.value.trim();
+          
+          // Basic validation
+          let valid = true;
+          
+          if (!name || name.length < 2) {
+            nameInput.style.borderColor = '#ff4757';
+            valid = false;
+          } else {
+            nameInput.style.borderColor = '';
+          }
+          
+          if (!email || !validateEmailFormat(email)) {
+            emailInput.style.borderColor = '#ff4757';
+            valid = false;
+          } else {
+            emailInput.style.borderColor = '';
+          }
+          
+          if (valid) {
+            // Show success message (static prototype - no API call)
+            alert(`Welcome to Conductor, ${name}! We'll send a confirmation to ${email} shortly.`);
+            form.reset();
+          }
+        });
+        
+        // Clear error styling on input
+        document.getElementById('customer-name').addEventListener('input', function() {
+          this.style.borderColor = '';
+        });
+        document.getElementById('customer-email').addEventListener('input', function() {
+          this.style.borderColor = '';
+        });
+      }
+      
+      function validateEmailFormat(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
       }
 
-      // Initialize Back to Top Controller
-      const backToTopController = new BackToTopController();
+      // ============================================
+      // INITIALIZATION
+      // ============================================
+      
+      // Initialize theme before rendering to avoid flash
+      initTheme();
+      
+      // Footer year
+      const footerYearEl = document.getElementById('footer-year');
+      if (footerYearEl) {
+        footerYearEl.textContent = getFooterYear();
+      }
+      
+      // Initialize all features when DOM is ready
+      document.addEventListener('DOMContentLoaded', () => {
+        // Render pipeline map
+        renderPipelineMap();
+        
+        // Initialize search
+        new SearchHighlighter();
+        
+        // Initialize zoom
+        new ZoomController();
+        
+        // Initialize back to top
+        const backToTopBtn = document.getElementById('back-to-top');
+        if (backToTopBtn) {
+          window.addEventListener('scroll', () => {
+            if (shouldShowBackToTop(window.scrollY)) {
+              backToTopBtn.classList.add('back-to-top--visible');
+            } else {
+              backToTopBtn.classList.remove('back-to-top--visible');
+            }
+          });
+          
+          backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        }
+        
+        // Theme toggle button
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener('click', toggleTheme);
+        }
+        
+        // Pipeline shortcut key
+        document.addEventListener('keydown', handlePipelineShortcutKey);
+        
+        // Initialize onboarding form
+        initOnboardingForm();
+      });
     </script>
   </body>
 </html>
