@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Conductor — the change pipeline</title>
+    <title>sajani — Conductor — the change pipeline</title>
     <meta
       name="description"
       content="How the Conductor platform moves a change from spec to production through a sequence of gates."
@@ -399,12 +399,6 @@
             if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
               e.preventDefault();
               this.searchInput.focus();
-              this.searchInput.select();
-            }
-            // Escape to clear search
-            if (e.key === 'Escape' && document.activeElement === this.searchInput) {
-              this.clearSearch();
-              this.searchInput.blur();
             }
           });
         }
@@ -413,119 +407,137 @@
           const query = this.searchInput.value.trim();
           this.clearHighlights();
           
-          if (query.length === 0) {
-            this.updateMatchCount(0);
+          if (!query) {
             this.searchResults.classList.remove('active');
             return;
           }
           
           this.matches = [];
-          const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
-          
-          this.searchableElements.forEach(element => {
-            this.highlightElement(element, regex, query);
-          });
-          
-          this.updateMatchCount(this.matches.length);
           this.currentMatchIndex = 0;
           
+          // Search through all searchable elements
+          this.searchableElements.forEach(element => {
+            const text = element.textContent;
+            const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
+            
+            if (regex.test(text)) {
+              // Create a document fragment to hold the highlighted content
+              const fragment = document.createDocumentFragment();
+              let lastIndex = 0;
+              const matches = [...text.matchAll(new RegExp(this.escapeRegex(query), 'gi'))];
+              
+              // Reset regex
+              regex.lastIndex = 0;
+              
+              // If element has only text nodes, we can highlight
+              if (this.canHighlight(element)) {
+                matches.forEach(match => {
+                  // Add text before match
+                  if (match.index > lastIndex) {
+                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                  }
+                  
+                  // Add highlighted match
+                  const mark = document.createElement('mark');
+                  mark.className = 'search-highlight';
+                  mark.textContent = match[0];
+                  fragment.appendChild(mark);
+                  
+                  this.matches.push(mark);
+                  
+                  lastIndex = match.index + match[0].length;
+                });
+                
+                // Add remaining text
+                if (lastIndex < text.length) {
+                  fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+                }
+                
+                // Replace content
+                element.innerHTML = '';
+                element.appendChild(fragment);
+              }
+            }
+          });
+          
+          // Update match count
+          this.matchCount.textContent = `${this.matches.length} match${this.matches.length !== 1 ? 'es' : ''}`;
+          this.searchResults.classList.add('active');
+          
+          // Navigate to first match
           if (this.matches.length > 0) {
-            this.searchResults.classList.add('active');
-            this.scrollToMatch(0);
-          } else {
-            this.searchResults.classList.remove('active');
+            this.highlightCurrentMatch();
           }
+        }
+        
+        canHighlight(element) {
+          // Check if element only contains text (no nested elements that might break)
+          const children = Array.from(element.children);
+          return children.length === 0 || children.every(c => c.tagName === 'CODE' || c.tagName === 'STRONG');
         }
         
         escapeRegex(string) {
           return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
         
-        highlightElement(element, regex, query) {
-          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
-          const textNodes = [];
-          
-          while (walker.nextNode()) {
-            textNodes.push(walker.currentNode);
-          }
-          
-          textNodes.forEach(node => {
-            const text = node.textContent;
-            if (regex.test(text)) {
-              const span = document.createElement('span');
-              span.innerHTML = text.replace(regex, '<mark class="highlight">$1</mark>');
-              node.parentNode.replaceChild(span, node);
-              
-              // Collect all highlight marks
-              span.querySelectorAll('.highlight').forEach(mark => {
-                this.matches.push(mark);
-              });
-            }
-          });
-        }
-        
         clearHighlights() {
-          document.querySelectorAll('.highlight').forEach(mark => {
+          document.querySelectorAll('mark.search-highlight').forEach(mark => {
             const text = document.createTextNode(mark.textContent);
             mark.parentNode.replaceChild(text, mark);
           });
           
           // Normalize text nodes
-          document.querySelectorAll('main p, main h1, main h2, main h3, main li, main code, .lede, .eyebrow').forEach(el => {
-            el.normalize();
-          });
+          document.body.normalize();
         }
         
-        clearSearch() {
-          this.searchInput.value = '';
-          this.clearHighlights();
-          this.matches = [];
-          this.updateMatchCount(0);
-          this.searchResults.classList.remove('active');
-        }
-        
-        updateMatchCount(count) {
-          if (count === 0) {
-            this.matchCount.textContent = 'No matches';
-          } else {
-            this.matchCount.textContent = `${this.currentMatchIndex + 1} of ${count}`;
-          }
-        }
-        
-        handleKeydown(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            if (e.shiftKey) {
+        handleKeydown(event) {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            if (event.shiftKey) {
               this.navigateMatch(-1);
             } else {
               this.navigateMatch(1);
             }
+          } else if (event.key === 'Escape') {
+            this.clearSearch();
+            this.searchInput.blur();
           }
         }
         
         navigateMatch(direction) {
           if (this.matches.length === 0) return;
           
-          // Remove current highlight class
-          this.matches.forEach(m => m.classList.remove('current'));
+          // Remove current highlight
+          if (this.matches[this.currentMatchIndex]) {
+            this.matches[this.currentMatchIndex].classList.remove('current');
+          }
           
           // Calculate new index
           this.currentMatchIndex += direction;
-          if (this.currentMatchIndex >= this.matches.length) {
-            this.currentMatchIndex = 0;
-          } else if (this.currentMatchIndex < 0) {
+          if (this.currentMatchIndex < 0) {
             this.currentMatchIndex = this.matches.length - 1;
+          } else if (this.currentMatchIndex >= this.matches.length) {
+            this.currentMatchIndex = 0;
           }
           
-          this.scrollToMatch(this.currentMatchIndex);
-          this.updateMatchCount(this.matches.length);
+          this.highlightCurrentMatch();
         }
         
-        scrollToMatch(index) {
-          if (this.matches[index]) {
-            this.matches[index].classList.add('current');
-            this.matches[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlightCurrentMatch() {
+          const match = this.matches[this.currentMatchIndex];
+          if (match) {
+            match.classList.add('current');
+            match.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            this.matchCount.textContent = `${this.currentMatchIndex + 1} of ${this.matches.length}`;
           }
+        }
+        
+        clearSearch() {
+          this.searchInput.value = '';
+          this.clearHighlights();
+          this.matches = [];
+          this.currentMatchIndex = 0;
+          this.searchResults.classList.remove('active');
         }
       }
 
@@ -533,223 +545,158 @@
       // ZOOM FUNCTIONALITY
       // ============================================
       
-      class ZoomController {
+      class ZoomManager {
         constructor() {
-          this.zoomIn = document.getElementById('zoom-in');
-          this.zoomOut = document.getElementById('zoom-out');
-          this.zoomLevel = document.getElementById('zoom-level');
           this.currentZoom = 100;
-          this.minZoom = 70;
-          this.maxZoom = 150;
-          this.step = 10;
+          this.minZoom = 50;
+          this.maxZoom = 200;
+          this.zoomStep = 10;
+          this.fontSize = 16; // base font size in px
+          
+          this.zoomOutBtn = document.getElementById('zoom-out');
+          this.zoomInBtn = document.getElementById('zoom-in');
+          this.zoomLevel = document.getElementById('zoom-level');
           
           this.init();
         }
         
         init() {
-          // Load stored zoom preference
-          const stored = localStorage.getItem('zoom-level');
-          if (stored) {
-            const parsed = parseInt(stored, 10);
-            if (!isNaN(parsed) && parsed >= this.minZoom && parsed <= this.maxZoom) {
-              this.currentZoom = parsed;
-              this.applyZoom();
-            }
-          }
-          
-          this.zoomIn.addEventListener('click', () => this.increaseZoom());
-          this.zoomOut.addEventListener('click', () => this.decreaseZoom());
-          
-          // Keyboard shortcuts
-          document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === '=') {
-              e.preventDefault();
-              this.increaseZoom();
-            }
-            if (e.ctrlKey && e.key === '-') {
-              e.preventDefault();
-              this.decreaseZoom();
-            }
-            if (e.ctrlKey && e.key === '0') {
-              e.preventDefault();
-              this.resetZoom();
-            }
-          });
+          this.zoomOutBtn.addEventListener('click', () => this.zoomOut());
+          this.zoomInBtn.addEventListener('click', () => this.zoomIn());
         }
         
-        increaseZoom() {
-          if (this.currentZoom < this.maxZoom) {
-            this.currentZoom += this.step;
-            this.applyZoom();
-            this.saveZoom();
-          }
-        }
-        
-        decreaseZoom() {
+        zoomOut() {
           if (this.currentZoom > this.minZoom) {
-            this.currentZoom -= this.step;
+            this.currentZoom -= this.zoomStep;
             this.applyZoom();
-            this.saveZoom();
           }
         }
         
-        resetZoom() {
-          this.currentZoom = 100;
-          this.applyZoom();
-          this.saveZoom();
+        zoomIn() {
+          if (this.currentZoom < this.maxZoom) {
+            this.currentZoom += this.zoomStep;
+            this.applyZoom();
+          }
         }
         
         applyZoom() {
-          document.body.style.fontSize = `${this.currentZoom}%`;
+          document.documentElement.style.fontSize = `${this.fontSize * (this.currentZoom / 100)}px`;
           this.zoomLevel.textContent = `${this.currentZoom}%`;
-          this.updateButtonStates();
-        }
-        
-        saveZoom() {
-          localStorage.setItem('zoom-level', this.currentZoom);
-        }
-        
-        updateButtonStates() {
-          this.zoomIn.classList.toggle('disabled', this.currentZoom >= this.maxZoom);
-          this.zoomOut.classList.toggle('disabled', this.currentZoom <= this.minZoom);
         }
       }
 
       // ============================================
-      // PIPELINE MAP RENDERER
+      // PIPELINE RENDERER
       // ============================================
       
-      function renderPipelineMap() {
-        const mapEl = document.getElementById('pipeline-map');
-        if (!mapEl) return;
+      function renderPipeline() {
+        const container = document.getElementById('pipeline-map');
+        if (!container) return;
         
-        // Clear static fallback
-        mapEl.innerHTML = '';
+        // Clear static fallback content
+        container.innerHTML = '';
         
         STAGES.forEach((stage, index) => {
           const li = document.createElement('li');
-          li.className = stage.gate ? 'is-gate' : 'is-advisory';
+          li.id = stage.id;
+          li.className = stage.gate ? 'stage-item stage-item--gate' : 'stage-item stage-item--advisory';
           
-          const link = document.createElement('a');
-          link.href = `#${stage.id}`;
-          link.textContent = stage.name;
+          li.innerHTML = `
+            <span class="stage-number">${index + 1}</span>
+            <div class="stage-content">
+              <span class="stage-name">${stage.name}</span>
+              <span class="stage-tag ${stage.gate ? 'tag--gate' : 'tag--advisory'}">${stage.gate ? 'Gate' : 'Advisory'}</span>
+            </div>
+          `;
           
-          const note = document.createElement('span');
-          note.className = 'pipeline__note';
-          note.textContent = stage.summary;
-          
-          li.appendChild(link);
-          li.appendChild(note);
-          mapEl.appendChild(li);
+          container.appendChild(li);
         });
       }
 
       // ============================================
-      // ONBOARDING FORM HANDLING
+      // FORM HANDLING
       // ============================================
       
-      function initOnboardingForm() {
+      function initForm() {
         const form = document.getElementById('onboarding-form');
         if (!form) return;
         
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
           
-          const nameInput = document.getElementById('customer-name');
-          const emailInput = document.getElementById('customer-email');
+          const formData = new FormData(form);
+          const name = formData.get('name');
+          const email = formData.get('email');
           
-          const name = nameInput.value.trim();
-          const email = emailInput.value.trim();
+          // Show success message
+          const button = form.querySelector('.submit-btn');
+          const originalText = button.innerHTML;
+          button.innerHTML = '✓ Submitted!';
+          button.disabled = true;
+          button.style.background = '#10b981';
           
-          // Basic validation
-          let valid = true;
-          
-          if (!name || name.length < 2) {
-            nameInput.style.borderColor = '#ff4757';
-            valid = false;
-          } else {
-            nameInput.style.borderColor = '';
-          }
-          
-          if (!email || !validateEmailFormat(email)) {
-            emailInput.style.borderColor = '#ff4757';
-            valid = false;
-          } else {
-            emailInput.style.borderColor = '';
-          }
-          
-          if (valid) {
-            // Show success message (static prototype - no API call)
-            alert(`Welcome to Conductor, ${name}! We'll send a confirmation to ${email} shortly.`);
+          // Reset form
+          setTimeout(() => {
             form.reset();
+            button.innerHTML = originalText;
+            button.disabled = false;
+            button.style.background = '';
+          }, 2000);
+          
+          console.log('Form submitted:', { name, email });
+        });
+      }
+
+      // ============================================
+      // SCROLL TO TOP BUTTON
+      // ============================================
+      
+      function initBackToTop() {
+        const button = document.getElementById('back-to-top');
+        if (!button) return;
+        
+        window.addEventListener('scroll', () => {
+          if (shouldShowBackToTop(window.scrollY)) {
+            button.classList.add('visible');
+          } else {
+            button.classList.remove('visible');
           }
         });
         
-        // Clear error styling on input
-        document.getElementById('customer-name').addEventListener('input', function() {
-          this.style.borderColor = '';
+        button.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         });
-        document.getElementById('customer-email').addEventListener('input', function() {
-          this.style.borderColor = '';
-        });
-      }
-      
-      function validateEmailFormat(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
       }
 
       // ============================================
       // INITIALIZATION
       // ============================================
       
-      // Initialize theme before rendering to avoid flash
-      initTheme();
-      
-      // Footer year
-      const footerYearEl = document.getElementById('footer-year');
-      if (footerYearEl) {
-        footerYearEl.textContent = getFooterYear();
-      }
-      
-      // Initialize all features when DOM is ready
       document.addEventListener('DOMContentLoaded', () => {
-        // Render pipeline map
-        renderPipelineMap();
+        // Initialize theme (before other initializations to prevent flash)
+        initTheme();
         
-        // Initialize search
+        // Set footer year
+        const yearEl = document.getElementById('footer-year');
+        if (yearEl) {
+          yearEl.textContent = getFooterYear();
+        }
+        
+        // Initialize components
         new SearchHighlighter();
+        new ZoomManager();
+        renderPipeline();
+        initForm();
+        initBackToTop();
         
-        // Initialize zoom
-        new ZoomController();
-        
-        // Initialize back to top
-        const backToTopBtn = document.getElementById('back-to-top');
-        if (backToTopBtn) {
-          window.addEventListener('scroll', () => {
-            if (shouldShowBackToTop(window.scrollY)) {
-              backToTopBtn.classList.add('back-to-top--visible');
-            } else {
-              backToTopBtn.classList.remove('back-to-top--visible');
-            }
-          });
-          
-          backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          });
-        }
-        
-        // Theme toggle button
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        if (themeToggleBtn) {
-          themeToggleBtn.addEventListener('click', toggleTheme);
-        }
-        
-        // Pipeline shortcut key
+        // Add keyboard shortcut listener
         document.addEventListener('keydown', handlePipelineShortcutKey);
         
-        // Initialize onboarding form
-        initOnboardingForm();
+        // Theme toggle button
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+          themeToggle.addEventListener('click', toggleTheme);
+        }
       });
     </script>
   </body>
